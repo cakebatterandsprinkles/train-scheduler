@@ -4,5 +4,15 @@
 }
 
 .big-header {
-    background-color:#f0f0f0;
+    background-color:#faf9f9;
+}
+
+body {
+    background-image: url("../assets/images/railroad.jpeg");
+    background-repeat: repeat-y;
+    background-size: 100%;
+}
+
+.heading {
+    font-weight: 500;
 }
