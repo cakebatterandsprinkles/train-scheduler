@@ -46,11 +46,13 @@
   });
 
   trains.on("child_added", function (childSnapshot) {
+    console.log(childSnapshot);
     console.log(childSnapshot.val());
 
     var trainName = childSnapshot.val().name;
     var destination = childSnapshot.val().destination;
     var firstTrainTime = moment(childSnapshot.val().start, "HH:mm").format("HH:mm");
+    // var firstTrainTimeA = moment(firstTrainTime).format("hh:mm A");
     var frequency = childSnapshot.val().rate;
 
     console.log(trainName);
@@ -86,7 +88,7 @@
         if (currentHour * 60 + currentMinute + diff < 24 * 60) {
           return diff;
         } else {
-          return (24 + firstTrainHour - currentHour) * 60 - (firstTrainMinute - currentMinute);
+          return (24 + firstTrainHour - currentHour) * 60 + (firstTrainMinute - currentMinute);
         }
       }
 
@@ -100,27 +102,44 @@
       if (currentTime < firstTrainTime) {
         return firstTrainTime;
       }
-      var data = currentMinute + minutesAway;
-      var subsequentHour = currentHour + 1;
-      var remainingMinutes = (data - 60);
-      if (data > 60) {
-        return subsequentHour + ":" + remainingMinutes;
-      } else if (data == 60) {
-        return subsequentHour + ":" + "00";
-      } else if (data < 59) {
-        return currentHour + ":" + data;
+      var data = currentMinute + minutesAway + currentHour * 60;
+      var hourPart = (Math.floor(data / 60)) % 24;
+      var minutePart = data % 60;
+
+      if (hourPart < 10) {
+        hourPart = "0" + hourPart;
       }
+
+      if(data / 60 >= 24) {
+        hourPart = "Tomorrow " + hourPart;
+      }
+
+      if (minutePart < 10) {
+        minutePart = "0" + minutePart;
+      }
+      return hourPart + ":" + minutePart;
     }
 
     nextArrival = nextArrivalTime();
+    // var nextArrivalA =  moment(nextArrival).format("hh:mm A");
 
+    var deleteButton = $("<button>").addClass("btn btn-danger").html('<i class="fas fa-trash-alt"></i> Delete').attr("data-key", childSnapshot.key);
+
+    deleteButton.on("click", function () {
+      let key = $(this).attr("data-key");
+      database.ref('trains/' + key).remove();
+      $(this).parent().parent().remove();
+    });
     // Create the new row
     var newRow = $("<tr>").append(
       $("<td>").text(trainName),
       $("<td>").text(destination),
       $("<td>").text(frequency),
+      $("<td>").text(firstTrainTime),
       $("<td>").text(nextArrival),
-      $("<td>").text(minutesAway)
+      $("<td>").text(minutesAway),
+      $("<td>").append(deleteButton)
+      // $("<td>").html('')
     );
 
     // Append the new row to the table
